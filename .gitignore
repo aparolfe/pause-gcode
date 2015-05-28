@@ -3,4 +3,4 @@
 *.stl
 *.pyc
 *.py~
-!unit_test_files/*
+!unit_test_files/**
