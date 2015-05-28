@@ -1,0 +1,6 @@
+*.gcode
+*.ini
+*.stl
+*.pyc
+*.py~
+!unit_test_files/*

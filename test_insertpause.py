@@ -83,22 +83,37 @@ class InsertPauseTest(unittest.TestCase):
         line = 'G1 Z1.600 F3000.000 ; move to next layer (12) and lift \n'
         self.assertEqual(find_Z_value(line), float(1.60))
 
-    def test_creates_new_file_name(self):
+    def test_creates_correct_new_file_name(self):
         self.assertEqual(create_output_filename("input.gcode","1.2"), "input_slide_height_1-2.gcode")
+
+    def test_creates_correct_pause_with_positive_inputs(self):
+        expected_output ="; Begin Pause Insertion Code Block\nG1 X100.000 Y0.000 Z11.200 \nM0 \nG1 Z1.300 \n; End Pause Insertion Code Block\n"
+        self.assertEqual(create_pause("G1 Z1.300 \n", 1.2, 100, 0, 10), expected_output)
+
+    def test_creates_correct_pause_with_negative_inputs(self):
+        expected_output ="; Begin Pause Insertion Code Block\nG1 X-250.000 Y-5.000 Z-8.700 \nM0 \nG1 Z1.300 \n; End Pause Insertion Code Block\n"
+        self.assertEqual(create_pause("G1 Z1.300 \n", 1.3, -250, -5, -10), expected_output)
+
+    def test_expected_result_with_known_good_gcode(self):
+        self.assertEqual(run("unit_test_files/no_errors.gcode", 1.2, "unit_test_files/success.gcode", 0, 0, 10), "File unit_test_files/success.gcode created, pause inserted after Line 500 - G1 Z1.325\n")
+        
+    def test_fails_for_gcode_without_layer_height_comment(self):
+        self.assertRaisesRegexp(RuntimeError, r'Input file incorrectly formatted. No new file created.', run, "unit_test_files/no_layer_height.gcode", 1.0, "failed.gcode", 0.0, 0.0, 10.0)
+
+    def test_fails_for_gcode_with_all_layers_lower_than_target(self):
+        self.assertRaisesRegexp(RuntimeError, "No layer printed above given slide height. No new file created.", run, "unit_test_files/max_z_2-6.gcode", 2.6, "failed.gcode", 0.0, 0.0, 10.0)
 
 if __name__ =='__main__':
     unittest.main()
 
 # Test case ideas
  # verify expected output on test files - do this by reading both files and assertEqual-ing each line?
- # gcode with no layer_height comment
- # gcode with no layer as high as targetZ
+ #  gcode with no layer_height comment
+ #  gcode with no layer as high as targetZ
  # gcode with all layers higher than targetZ
  # gcode with layer Z not exactly the sum of slide height and layer height
  #  correctly identifies layer_height line and extracts the right value for Z
  #  correctly identifies ;LAYER: lines
  #  correctly identifies Z move command lines and extracts the right value for Z
  #  creates the correct output file name
- # correctly identifies the number of layers
- # correctly identifies the printing height for each layer
- # writes the correct text for the pause insertion
+ #  writes the correct text for the pause insertion
