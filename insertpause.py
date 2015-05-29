@@ -1,6 +1,5 @@
 import argparse
 import re
-import sys
 
 def is_layer_separator(line):
     return re.search(r'^;LAYER:', line)
